@@ -12,7 +12,7 @@ import PostList from 'components/posts/list';
 import Pagination from 'components/pagination/archive';
 import Placeholder from 'components/placeholder';
 
-class Term extends Component {
+class AuthorArchive extends Component {
 	shouldComponentUpdate( nextProps ) {
 		const newQuery = ! isEqual( nextProps.query, this.props.query );
 		const newPosts = ! isEqual( nextProps.posts, this.props.posts );
@@ -25,7 +25,7 @@ class Term extends Component {
 			<div>
 				<QueryPosts query={ query || {} } />
 				{ loading ?
-					<Placeholder type="term" /> :
+					<Placeholder type="author" /> :
 					<PostList posts={ posts } />
 				}
 
@@ -40,9 +40,9 @@ class Term extends Component {
 };
 
 export default connect( ( state, ownProps ) => {
-	const { query, taxonomy, term } = ownProps;
+	const { query, author } = ownProps;
 	let path = FoxhoundSettings.URL.path || '/';
-	path += ( 'category' === taxonomy ) ? `category/${ term }/` : `tag/${ term }/`;
+	path += `author/${ author }/`;
 
 	// Needs to be below query setup
 	const requesting = isRequestingPostsForQuery( state, query );
@@ -57,4 +57,4 @@ export default connect( ( state, ownProps ) => {
 		page: parseInt( query.page ),
 		totalPages: getTotalPagesForQuery( state, query ),
 	};
-} )( Term );
+} )( AuthorArchive );

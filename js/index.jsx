@@ -21,8 +21,10 @@ import Index from 'components/posts';
 import SinglePost from 'components/post';
 import SinglePage from 'components/post/page';
 import Term from 'components/term';
+import Attachment from 'components/attachment';
 import Search from 'components/search';
 import DateArchive from 'components/date';
+import Author from 'components/author';
 import NotFound from 'components/not-found';
 import { createReduxStore } from './state';
 import { setMenu } from 'wordpress-query-menu/lib/state';
@@ -60,6 +62,7 @@ function renderApp() {
 			<Route path={ `${ blogURL }p/:paged` } component={ Index } />
 			{ frontPageRoute }
 			<Route path={ `${ path }search/:search` } component={ Search } />
+			<Route path={ `${ path }attachment/:id` } component={ Attachment } />
 			<Route path={ `${ path }category/:slug` } taxonomy="category" component={ Term } />
 			<Route path={ `${ path }category/:slug/p/:paged` } taxonomy="category" component={ Term } />
 			<Route path={ `${ path }tag/:slug` } taxonomy="post_tag" component={ Term } />
@@ -70,6 +73,8 @@ function renderApp() {
 			<Route path={ `${ path }date/:year/:month/p/:paged` } component={ DateArchive } />
 			<Route path={ `${ path }date/:year/:month/:day` } component={ DateArchive } />
 			<Route path={ `${ path }date/:year/:month/:day/p/:paged` } component={ DateArchive } />
+			<Route path={ `${ path }author/:slug` } component={ Author } />
+			<Route path={ `${ path }author/:slug/p/:paged` } component={ Author } />
 			<Route path={ `${ path }page/**` } component={ SinglePage } />
 			<Route path={ `${ path }:year/:month/:slug` } component={ SinglePost } />
 			<Route path="*" component={ NotFound } />
@@ -100,6 +105,15 @@ function renderApp() {
 // Set up link capture on all links in the app context.
 function handleLinkClick() {
 	jQuery( '#page' ).on( 'click', 'a[rel!=external][target!=_blank]', ( event ) => {
+		// Custom functionality for attachment pages
+		const linkRel = jQuery( event.currentTarget ).attr( 'rel' );
+		if ( linkRel && linkRel.search( /attachment/ ) !== -1 ) {
+			event.preventDefault();
+			const result = jQuery( event.currentTarget ).attr( 'rel' ).match( /wp-att-(\d*)/ );
+			const attachId = result[ 1 ];
+			history.push( path + 'attachment/' + attachId );
+			return;
+		}
 		// Don't capture clicks in post content.
 		if ( jQuery( event.currentTarget ).closest( '.entry-content' ).length ) {
 			return;

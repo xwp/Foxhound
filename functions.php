@@ -10,7 +10,7 @@
 /**
  * Foxhound only works if the REST API is available
  */
-if ( version_compare( $GLOBALS['wp_version'], '4.7-alpha', '<' ) ) {
+if ( version_compare( $GLOBALS['wp_version'], '4.7', '<' ) ) {
 	require get_template_directory() . '/inc/compat-warnings.php';
 	return;
 }
@@ -146,7 +146,7 @@ function foxhound_scripts() {
 	$user_id = get_current_user_id();
 	$user = get_userdata( $user_id );
 
-	wp_scripts()->add_data( FOXHOUND_APP, 'data', sprintf(
+	$foxhound_settings = sprintf(
 		'var SiteSettings = %s; var FoxhoundSettings = %s;',
 		wp_json_encode( array(
 			'endpoint' => esc_url_raw( $url ),
@@ -168,7 +168,8 @@ function foxhound_scripts() {
 				'description' => get_bloginfo( 'description', 'display' ),
 			),
 		) )
-	) );
+	);
+	wp_add_inline_script( FOXHOUND_APP, $foxhound_settings, 'before' );
 }
 add_action( 'wp_enqueue_scripts', 'foxhound_scripts' );
 
@@ -252,6 +253,9 @@ add_action( 'wp_enqueue_scripts', 'foxhound_fonts' );
 
 /**
  * Add "pagename" to the accepted parameters in the query for page requests via API.
+ *
+ * @param array           $args    Key value array of query var to query value.
+ * @param WP_REST_Request $request The request used.
  */
 function foxhound_add_path_to_page_query( $args, $request ) {
 	if ( isset( $request['pagename'] ) ) {
