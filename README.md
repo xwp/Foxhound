@@ -13,6 +13,7 @@ Since this is a more "experimental" theme, you'll need to have a few things set 
 1. WordPress 4.7 or higher, which includes the REST API content endpoints.
 2. You'll also need this [WP-API Menus plugin](https://wordpress.org/plugins/wp-api-menus/). The REST API doesn't provide an endpoint for menus, so another plugin is necessary.
 3. Your permalinks will need to be set to `/%year%/%monthnum%/%postname%/`. Single-post/page views will not work without permalinks set. Category & tag archives bases should be set to `category` and `tag`, respectively.
+4. To edit posts/pages in the Customizer via the [Customize Posts](https://wordpress.org/plugins/customize-posts/) plugin, you'll also need to install the [Customize Preview Fetch API](https://github.com/xwp/wp-customize-preview-fetch-api) plugin (until [#42163](https://core.trac.wordpress.org/ticket/42163) lands in core).
 
 Display & Features
 ------------------

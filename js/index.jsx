@@ -1,4 +1,4 @@
-/*global FoxhoundSettings, FoxhoundData, FoxhoundMenu, jQuery */
+/*global FoxhoundSettings, FoxhoundData, FoxhoundMenu, jQuery, wp */
 // Load in the babel (es6) polyfill, and fetch polyfill
 import 'babel-polyfill';
 import 'whatwg-fetch';
@@ -30,6 +30,10 @@ import NotFound from 'components/not-found';
 import { createReduxStore } from './state';
 import { setMenu } from 'wordpress-query-menu/lib/state';
 import { setPost, setPosts } from './utils/initial-actions';
+import { requestPost, POST_REQUEST_SUCCESS } from 'wordpress-query-posts/lib/state';
+import { getPost } from 'wordpress-query-posts/lib/selectors';
+import { requestPage, PAGE_REQUEST_SUCCESS } from 'wordpress-query-page/lib/state';
+import { getPage } from 'wordpress-query-page/lib/selectors';
 
 // Accessibility!
 import { keyboardFocusReset, skipLink, toggleFocus } from 'utils/a11y';
@@ -208,3 +212,36 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	renderPreloadData();
 	handleLinkClick();
 } );
+
+// Export internals for the sake of the Customizer preview.
+if ( typeof wp !== 'undefined' && wp.customize ) {
+	window.foxhoundTheme = {
+		store: store,
+		postTypes: {
+			post: {
+				selector: getPost,
+				dispatchSuccess: ( data ) => {
+					store.dispatch( {
+						type: POST_REQUEST_SUCCESS,
+						postId: data.id,
+						pagePath: data.slug,
+						page: data
+					} );
+				},
+				request: requestPost,
+			},
+			page: {
+				selector: getPage,
+				dispatchSuccess: ( data ) => {
+					store.dispatch( {
+						type: PAGE_REQUEST_SUCCESS,
+						postId: data.id,
+						pagePath: data.slug,
+						page: data
+					} );
+				},
+				request: requestPage,
+			}
+		}
+	};
+}
