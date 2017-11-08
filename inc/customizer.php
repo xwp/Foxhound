@@ -53,3 +53,13 @@ function _foxhound_disable_customize_post_link_draft( $wp_customize ) {
 	}
 }
 add_action( 'customize_register', '_foxhound_disable_customize_post_link_draft' );
+
+/**
+ * Prevent Customize Posts from attempting to do selective refresh for post partials since theme is React-rendered.
+ */
+function _foxhound_disable_customize_posts_partial_ensuring() {
+	if ( wp_script_is( 'customize-preview-posts' ) ) {
+		wp_add_inline_script( 'customize-preview-posts', 'wp.customize.previewPosts.ensurePartialsForPostSetting = function() {};' );
+	}
+}
+add_action( 'wp_enqueue_scripts', '_foxhound_disable_customize_posts_partial_ensuring', 20 );
