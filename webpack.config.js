@@ -54,7 +54,7 @@ webpackConfig = {
 	},
 	eslint: {
 		configFile: path.join( __dirname, '.eslintrc' ),
-		failOnError: true,
+		failOnError: ( 'production' === NODE_ENV ),
 		quiet: true,
 	},
 	node: {
