@@ -165,7 +165,64 @@
 			if ( ! partial.params.navMenuArgs || ! partial.params.navMenuArgs.theme_location ) {
 				return $.Deferred().reject().promise();
 			}
+
+			const navMenuLocationSetting = api( 'nav_menu_locations[' + partial.params.navMenuArgs.theme_location + ']' );
+			if ( ! navMenuLocationSetting ) {
+				return $.Deferred().reject().promise();;
+			}
+
+			const unprocessedItems = {};
+			api.each( ( setting ) => {
+				const value = setting.get();
+				const matches = setting.id.match( /^nav_menu_item\[(-?\d+)]$/ );
+				if ( ! matches || value.nav_menu_term_id !== navMenuLocationSetting.get() ) {
+					return;
+				}
+				const navMenuItemId = parseInt( matches[1], 10 );
+				const item = {
+					ID: navMenuItemId,
+					attr: value.attr_title,
+					classes: value.classes,
+					description: value.description,
+					object: value.object,
+					object_id: value.object_id,
+					order: value.position,
+					parent: value.menu_item_parent,
+					target: value.target,
+					title: value.title || value.original_title,
+					type: value.type,
+					type_label: value.type_label,
+					url: value.url,
+					xfn: value.xfn,
+					children: []
+				};
+				unprocessedItems[ item.ID ] = item;
+			} );
+
+			/**
+			 * Get nav menu items in tree.
+			 *
+			 * @param {int} parent - Parent item ID.
+			 * @return {Array} Nav menu items.
+			 */
+			const getItems = ( parent ) => {
+				const items = [];
+				for ( const item of Object.values( unprocessedItems ) ) {
+					if ( parent === item.parent ) {
+						item.children = getItems( item.ID );
+						items.push( item );
+						delete unprocessedItems[ item.ID ];
+					}
+				}
+				return items.sort( ( a, b ) => a.order - b.order );
+			};
+
+			const items = getItems( 0 );
+			foxhoundTheme.actions.setMenu( partial.params.navMenuArgs.theme_location, items );
+
+			// @todo This is now unnecessary.
 			partial.fetch();
+
 			return $.Deferred().resolve().promise();
 		}
 	} );

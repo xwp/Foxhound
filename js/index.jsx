@@ -218,6 +218,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 if ( typeof wp !== 'undefined' && wp.customize ) {
 	window.foxhoundTheme = {
 		store: store,
+		actions: bindActionCreators( { setMenu }, store.dispatch ),
 		requestMenu,
 		postTypes: {
 			post: {
