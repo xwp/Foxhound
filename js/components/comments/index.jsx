@@ -1,7 +1,7 @@
 // External dependencies
 import React from 'react';
 import { connect } from 'react-redux';
-import BodyClass from 'react-body-class';
+import BodyClass from 'components/react-body-class';
 
 // Internal dependencies
 import QueryComments from 'wordpress-query-comments';

@@ -2,7 +2,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import DocumentMeta from 'react-document-meta';
-import BodyClass from 'react-body-class';
+import BodyClass from 'components/react-body-class';
 import he from 'he';
 
 const NotFound = React.createClass( {
