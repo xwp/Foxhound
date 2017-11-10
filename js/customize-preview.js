@@ -259,6 +259,21 @@
 	);
 
 	/**
+	 * Autop.
+	 *
+	 * There is a fuller implementation of this in editor.js which we could use instead if we want to.
+	 * In any case, this is just for instant preview while waiting for server-rendered value.
+	 *
+	 * @param {string} text - Text to add paragraphs and breaks to.
+	 * @returns {string} Paragraphed text.
+	 */
+	const autop = function( text ) {
+		return text.split( /\n\n+/ ).map(
+			( paragraph ) => '<p>' + paragraph.replace( /\n/g, '<br>' ) + '</p>'
+		).join( '' );
+	};
+
+	/**
 	 * Listen to post and postmeta changes and sync into store.
 	 */
 	api.bind( 'change', function( setting ) {
@@ -297,8 +312,8 @@
 
 			// Apply low-fidelity instant preview.
 			data.title.rendered = value.post_title;
-			data.content.rendered = value.post_content.replace( /\n/g, '<br>' );
-			data.excerpt.rendered = value.post_excerpt.replace( /\n/g, '<br>' );
+			data.content.rendered = autop( value.post_content );
+			data.excerpt.rendered = autop( value.post_excerpt );
 			postTypeInterface.dispatchSuccess( data );
 
 			// Apply high-fidelity rendered preview from server.
