@@ -34,6 +34,7 @@ import { requestPost, POST_REQUEST_SUCCESS } from 'wordpress-query-posts/lib/sta
 import { getPost } from 'wordpress-query-posts/lib/selectors';
 import { requestPage, PAGE_REQUEST_SUCCESS } from 'wordpress-query-page/lib/state';
 import { getPage } from 'wordpress-query-page/lib/selectors';
+import { requestMenu } from 'wordpress-query-menu/lib/state';
 
 // Accessibility!
 import { keyboardFocusReset, skipLink, toggleFocus } from 'utils/a11y';
@@ -217,6 +218,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 if ( typeof wp !== 'undefined' && wp.customize ) {
 	window.foxhoundTheme = {
 		store: store,
+		requestMenu,
 		postTypes: {
 			post: {
 				selector: getPost,

@@ -123,6 +123,57 @@
 	};
 
 	/**
+	 * Partial for previewing a nav menu location.
+	 *
+	 * @class
+	 * @augments wp.customize.navMenusPreview.NavMenuInstancePartial
+	 */
+	const NavMenuInstancePartial = api.navMenusPreview.NavMenuInstancePartial.extend( {
+
+		/**
+		 * @inheritDoc
+		 */
+		initialize: function( id, options ) {
+			const partial = this;
+			api.navMenusPreview.NavMenuInstancePartial.prototype.initialize.call( this, id, options );
+			partial.fetch = _.debounce( partial.fetch, api.settings.timeouts.selectiveRefresh );
+		},
+
+		/**
+		 * Fetch the nav menu location and update the store.
+		 *
+		 * This will get debounced.
+		 *
+		 * @returns {void}
+		 */
+		fetch: function() {
+			const partial = this;
+			foxhoundTheme.requestMenu( partial.params.navMenuArgs.theme_location )( function( action ) {
+				foxhoundTheme.store.dispatch( action );
+			} );
+		},
+
+		/**
+		 * Refresh partial.
+		 *
+		 * @todo This is not currently able to dispatch nav menu item changes directly into the store. Once it can, then updates will be instant.
+		 *
+		 * @returns {Promise} Rejected promise when nav menu location is not available.
+		 */
+		refresh: function() {
+			const partial = this;
+			if ( ! partial.params.navMenuArgs || ! partial.params.navMenuArgs.theme_location ) {
+				return $.Deferred().reject().promise();
+			}
+			partial.fetch();
+			return $.Deferred().resolve().promise();
+		}
+	} );
+
+	// Override nav menu instance partial with one that speaks React.
+	api.selectiveRefresh.partialConstructor.nav_menu_instance = NavMenuInstancePartial;
+
+	/**
 	 * Request post update.
 	 *
 	 * @param {object} data - Post data.
