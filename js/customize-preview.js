@@ -1,45 +1,98 @@
 /* global _, jQuery, wp, foxhoundTheme, wpApiSettings */
 ( function( $, api, foxhoundTheme ) {
-	var debouncedRequestPostUpdate;
+	var debouncedRequestPostUpdate, RestApiRenderedTextPartial;
 
 	/**
-	 * Update title.
+	 * Partial for previewing a value that is available as both raw/rendered via a REST API endpoint.
 	 *
-	 * @param {string} title - Title.
-	 * @param {boolean} [isRendered=false] - Whether the title is rendered (with entities).
-	 * @returns {void}
+	 * @class
+	 * @augments wp.customize.selectiveRefresh.Partial
+	 * @since 4.5.0
 	 */
-	function updateTitle( title, isRendered ) {
-		var containers = $( '.site-title a' );
-		if ( isRendered ) {
-			containers.html( title );
-		} else {
-			containers.text( title );
-		}
-	}
+	RestApiRenderedTextPartial = api.selectiveRefresh.Partial.extend( {
+		/* eslint consistent-this: [ "error", "partial" ] */
 
-	// Update the site title when its setting changes.
-	api( 'blogname', function( setting ) {
-		var populateRenderedTitle;
+		/**
+		 * @inheritDoc
+		 */
+		initialize: function( id, options ) {
+			var partial = this;
+			api.selectiveRefresh.Partial.prototype.initialize.call( this, id, options );
+			partial.renderFetchedContent = _.debounce( partial.renderFetchedContent, api.settings.timeouts.selectiveRefresh );
+		},
 
-		function handleResponse( response ) {
-			response.json().then( function( data ) {
-				updateTitle( data.rendered, true );
+		/**
+		 * Fetch endpoint and render the rendered content.
+		 *
+		 * @returns {void}
+		 */
+		renderFetchedContent: function renderFetchedContent() {
+			var partial = this;
+			fetch( partial.params.endpoint ).then( function( response ) {
+				response.json().then( function( data ) {
+					if ( 'undefined' === typeof data.rendered ) {
+						throw new Error( 'Endpoint did not include rendered data.' );
+					}
+					_.each( partial.placements(), function( placement ) {
+						partial.renderPlacementContent( placement, data.rendered );
+					} );
+				} );
 			} );
+		},
+
+		/**
+		 * Render text as the content for a placement.
+		 *
+		 * @param {wp.customize.selectiveRefresh.Placement} placement - Placement.
+		 * @param {string} text - Rendered text.
+		 * @returns {void}
+		 */
+		renderPlacementContent: function renderPlacementContent( placement, text ) {
+			var partial = this;
+			partial.renderContent( _.extend(
+				{},
+				placement,
+				{
+					addedContent: text
+				}
+			) );
+		},
+
+		/**
+		 * Refresh.
+		 *
+		 * Override refresh behavior to apply changes with JS instead of doing
+		 * a selective refresh request for PHP rendering (since unnecessary).
+		 *
+		 * @returns {jQuery.promise} Resolved promise.
+		 */
+		refresh: function() {
+			var partial = this, setting;
+			setting = api( _.first( partial.settings() ) );
+
+			// Render instant low-fidelity.
+			_.each( partial.placements(), function( placement ) {
+				var text = _.escape( setting.get().replace( /<[^>]+>/g, '' ) ); // Strip tags and then escape.
+				partial.renderPlacementContent( placement, text );
+			} );
+
+			// Update with high-fidelity rendered content.
+			partial.renderFetchedContent();
+
+			// Return resolved promise since no server-side selective refresh will be requested.
+			return $.Deferred().resolve().promise();
 		}
 
-		populateRenderedTitle = _.debounce( function() {
-			fetch( wpApiSettings.root + 'foxhound/v1/title/' ).then( handleResponse );
-		}, api.settings.timeouts.selectiveRefresh );
+	} );
 
-		setting.bind( function( to ) {
-
-			// Instant low-fidelity preview.
-			updateTitle( to, false );
-
-			// Server-rendered high-fidelity preview.
-			populateRenderedTitle();
-		} );
+	// Add the partial for the site title. The title should really be getting rendered with React.
+	api.bind( 'preview-ready', function() {
+		api.selectiveRefresh.partial.add( new RestApiRenderedTextPartial( 'blogname', {
+			selector: '.site-title a',
+			settings: [ 'blogname' ],
+			containerInclusive: false,
+			endpoint: wpApiSettings.root + 'foxhound/v1/title/'
+		} ) );
 	} );
 
 	/**
