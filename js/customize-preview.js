@@ -1,11 +1,44 @@
-/* global _, jQuery, wp, foxhoundTheme */
+/* global _, jQuery, wp, foxhoundTheme, wpApiSettings */
 ( function( $, api, foxhoundTheme ) {
 	var debouncedRequestPostUpdate;
 
-	// Site title.
-	api( 'blogname', function( value ) {
-		value.bind( function( to ) {
-			$( '.site-title a' ).text( to );
+	/**
+	 * Update title.
+	 *
+	 * @param {string} title - Title.
+	 * @param {boolean} [isRendered=false] - Whether the title is rendered (with entities).
+	 * @returns {void}
+	 */
+	function updateTitle( title, isRendered ) {
+		var containers = $( '.site-title a' );
+		if ( isRendered ) {
+			containers.html( title );
+		} else {
+			containers.text( title );
+		}
+	}
+
+	// Update the site title when its setting changes.
+	api( 'blogname', function( setting ) {
+		var populateRenderedTitle;
+
+		function handleResponse( response ) {
+			response.json().then( function( data ) {
+				updateTitle( data.rendered, true );
+			} );
+		}
+
+		populateRenderedTitle = _.debounce( function() {
+			fetch( wpApiSettings.root + 'foxhound/v1/title/' ).then( handleResponse );
+		}, api.settings.timeouts.selectiveRefresh );
+
+		setting.bind( function( to ) {
+
+			// Instant low-fidelity preview.
+			updateTitle( to, false );
+
+			// Server-rendered high-fidelity preview.
+			populateRenderedTitle();
 		} );
 	} );
 
@@ -13,6 +46,7 @@
 	 * Override the handler for clicking links in preview to allow history.pushState() to do its thing.
 	 *
 	 * @param {jQuery.Event} event Event.
+	 * @returns {void}
 	 */
 	api.Preview.prototype.handleLinkClick = function handleLinkClick( event ) {
 		var link, isInternalJumpLink;
@@ -40,7 +74,8 @@
 	/**
 	 * Request post update.
 	 *
-	 * @param {object} data
+	 * @param {object} data - Post data.
+	 * @returns {void}
 	 */
 	function requestPostUpdate( data ) {
 		var postTypeInterface = foxhoundTheme.postTypes[ data.type ];
