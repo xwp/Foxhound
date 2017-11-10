@@ -1,6 +1,5 @@
 /* global _, jQuery, wp, foxhoundTheme, wpApiSettings */
 ( function( $, api, foxhoundTheme ) {
-	var debouncedRequestPostUpdate, RestApiRenderedTextPartial;
 
 	/**
 	 * Partial for previewing a value that is available as both raw/rendered via a REST API endpoint.
@@ -9,14 +8,14 @@
 	 * @augments wp.customize.selectiveRefresh.Partial
 	 * @since 4.5.0
 	 */
-	RestApiRenderedTextPartial = api.selectiveRefresh.Partial.extend( {
+	const RestApiRenderedTextPartial = api.selectiveRefresh.Partial.extend( {
 		/* eslint consistent-this: [ "error", "partial" ] */
 
 		/**
 		 * @inheritDoc
 		 */
 		initialize: function( id, options ) {
-			var partial = this;
+			const partial = this;
 			api.selectiveRefresh.Partial.prototype.initialize.call( this, id, options );
 			partial.renderFetchedContent = _.debounce( partial.renderFetchedContent, api.settings.timeouts.selectiveRefresh );
 		},
@@ -27,13 +26,13 @@
 		 * @returns {void}
 		 */
 		renderFetchedContent: function renderFetchedContent() {
-			var partial = this;
-			fetch( partial.params.endpoint ).then( function( response ) {
-				response.json().then( function( data ) {
+			const partial = this;
+			fetch( partial.params.endpoint ).then( ( response ) => {
+				response.json().then( ( data ) => {
 					if ( 'undefined' === typeof data.rendered ) {
 						throw new Error( 'Endpoint did not include rendered data.' );
 					}
-					_.each( partial.placements(), function( placement ) {
+					_.each( partial.placements(), ( placement ) => {
 						partial.renderPlacementContent( placement, data.rendered );
 					} );
 				} );
@@ -48,7 +47,7 @@
 		 * @returns {void}
 		 */
 		renderPlacementContent: function renderPlacementContent( placement, text ) {
-			var partial = this;
+			const partial = this;
 			partial.renderContent( _.extend(
 				{},
 				placement,
@@ -67,12 +66,12 @@
 		 * @returns {jQuery.promise} Resolved promise.
 		 */
 		refresh: function() {
-			var partial = this, setting;
-			setting = api( _.first( partial.settings() ) );
+			const partial = this;
+			const setting = api( _.first( partial.settings() ) );
 
 			// Render instant low-fidelity.
-			_.each( partial.placements(), function( placement ) {
-				var text = _.escape( setting.get().replace( /<[^>]+>/g, '' ) ); // Strip tags and then escape.
+			_.each( partial.placements(),( placement ) => {
+				const text = _.escape( setting.get().replace( /<[^>]+>/g, '' ) ); // Strip tags and then escape.
 				partial.renderPlacementContent( placement, text );
 			} );
 
@@ -86,7 +85,7 @@
 	} );
 
 	// Add the partial for the site title. The title should really be getting rendered with React.
-	api.bind( 'preview-ready', function() {
+	api.bind( 'preview-ready', () => {
 		api.selectiveRefresh.partial.add( new RestApiRenderedTextPartial( 'blogname', {
 			selector: '.site-title a',
 			settings: [ 'blogname' ],
@@ -102,15 +101,14 @@
 	 * @returns {void}
 	 */
 	api.Preview.prototype.handleLinkClick = function handleLinkClick( event ) {
-		var link, isInternalJumpLink;
-		link = $( event.target );
+		const link = $( event.target );
 
 		// No-op if the anchor is not a link.
 		if ( _.isUndefined( link.attr( 'href' ) ) ) {
 			return;
 		}
 
-		isInternalJumpLink = ( '#' === link.attr( 'href' ).substr( 0, 1 ) );
+		const isInternalJumpLink = ( '#' === link.attr( 'href' ).substr( 0, 1 ) );
 
 		// Allow internal jump links to behave normally without preventing default.
 		if ( isInternalJumpLink ) {
@@ -131,7 +129,7 @@
 	 * @returns {void}
 	 */
 	function requestPostUpdate( data ) {
-		var postTypeInterface = foxhoundTheme.postTypes[ data.type ];
+		const postTypeInterface = foxhoundTheme.postTypes[ data.type ];
 		if ( ! postTypeInterface ) {
 			return;
 		}
@@ -140,14 +138,14 @@
 		} );
 	}
 
-	debouncedRequestPostUpdate = _.wrap(
+	const debouncedRequestPostUpdate = _.wrap(
 		_.memoize(
-			function() {
+			() => {
 				return _.debounce( requestPostUpdate, api.settings.timeouts.selectiveRefresh );
 			},
 			_.property( 'id' )
 		),
-		function( func, obj ) {
+		( func, obj ) => {
 			return func( obj )( obj );
 		}
 	);
@@ -156,9 +154,8 @@
 	 * Listen to post and postmeta changes and sync into store.
 	 */
 	api.bind( 'change', function( setting ) {
-		var idParts, settingType, postType, postId, metaKey, value, data, postTypeInterface;
-		idParts = setting.id.replace( /]/g, '' ).split( /\[/ );
-		settingType = idParts.shift();
+		const idParts = setting.id.replace( /]/g, '' ).split( /\[/ );
+		const settingType = idParts.shift();
 
 		if ( 'post' !== settingType && 'postmeta' !== settingType ) {
 
@@ -166,18 +163,19 @@
 			return;
 		}
 
-		postType = idParts.shift();
+		const postType = idParts.shift();
 
 		// Only posts and pages are currently supported.
 		if ( ! foxhoundTheme.postTypes[ postType ] ) {
 			return;
 		}
-		postTypeInterface = foxhoundTheme.postTypes[ postType ];
+		const postTypeInterface = foxhoundTheme.postTypes[ postType ];
 
-		postId = parseInt( idParts.shift(), 10 );
+		const postId = parseInt( idParts.shift(), 10 );
 		if ( isNaN( postId ) ) {
 			return;
 		}
+		let metaKey = null;
 		if ( 'postmeta' === settingType ) {
 			metaKey = idParts.shift();
 			if ( ! metaKey ) {
@@ -186,8 +184,8 @@
 		}
 
 		if ( 'post' === settingType ) {
-			data = _.clone( postTypeInterface.selector( foxhoundTheme.store.getState(), postId ) );
-			value = setting.get();
+			const data = _.clone( postTypeInterface.selector( foxhoundTheme.store.getState(), postId ) );
+			const value = setting.get();
 
 			// Apply low-fidelity instant preview.
 			data.title.rendered = value.post_title;
