@@ -10,7 +10,7 @@
 /**
  * Foxhound only works if the REST API is available with the latest improvements to the Customizer in 4.9.
  */
-if ( version_compare( $GLOBALS['wp_version'], '4.9', '<' ) ) {
+if ( version_compare( strtok( $GLOBALS['wp_version'], '-' ), '4.9', '<' ) ) {
 	require get_template_directory() . '/inc/compat-warnings.php';
 	return;
 }
