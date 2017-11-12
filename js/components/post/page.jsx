@@ -34,7 +34,9 @@ const SinglePage = React.createClass( {
 		meta.title = he.decode( meta.title );
 
 		const classes = classNames( {
-			entry: true
+			entry: true,
+			hentry: true,
+			[ `post-${post.id}` ]: true
 		} );
 		const featuredMedia = this.getFeaturedMedia( post );
 

@@ -168,7 +168,7 @@
 
 			const navMenuLocationSetting = api( 'nav_menu_locations[' + partial.params.navMenuArgs.theme_location + ']' );
 			if ( ! navMenuLocationSetting ) {
-				return $.Deferred().reject().promise();;
+				return $.Deferred().reject().promise();
 			}
 
 			const unprocessedItems = {};

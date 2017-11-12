@@ -18,7 +18,9 @@ let Post = React.createClass( {
 		}
 
 		let classes = classNames( {
-			entry: true
+			entry: true,
+			hentry: true,
+			[ `post-${post.id}` ]: true
 		} );
 
 		let path = post.link.replace( FoxhoundSettings.URL.base, FoxhoundSettings.URL.path );
