@@ -14,6 +14,7 @@ import ContentMixin from 'utils/content-mixin';
 // Components
 import Media from './image';
 import Comments from 'components/comments';
+import CustomizePostFieldPartial from 'components/customize-post-field-partial';
 import Placeholder from 'components/placeholder';
 import PostPreview from './preview';
 
@@ -44,13 +45,17 @@ const SinglePage = React.createClass( {
 			<article id={ `post-${ post.id }` } className={ classes }>
 				<DocumentMeta { ...meta } />
 				<BodyClass classes={ [ 'page', 'single', 'single-page' ] } />
-				<h1 className="entry-title" dangerouslySetInnerHTML={ this.getTitle( post ) } />
+				<CustomizePostFieldPartial post={ post } field="title">
+					<h1 className="entry-title" dangerouslySetInnerHTML={ this.getTitle( post ) } />
+				</CustomizePostFieldPartial>
 				{ featuredMedia ?
 					<Media media={ featuredMedia } parentClass='entry-image' /> :
 					null
 				}
 				<div className="entry-meta"></div>
-				<div className="entry-content" dangerouslySetInnerHTML={ this.getContent( post ) } />
+				<CustomizePostFieldPartial post={ post } field="content">
+					<div className="entry-content" dangerouslySetInnerHTML={ this.getContent( post ) } />
+				</CustomizePostFieldPartial>
 			</article>
 		);
 	},
