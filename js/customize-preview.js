@@ -230,10 +230,16 @@
 	// Override nav menu instance partial with one that speaks React.
 	api.selectiveRefresh.partialConstructor.nav_menu_instance = NavMenuInstancePartial;
 
+	// Since fetch() doesn't facilitate aborting yet.
+	const existingRequests = {};
+
 	/**
 	 * Request post update.
 	 *
 	 * @param {object} data - Post data.
+	 * @param {number} data.id - Post ID.
+	 * @param {string} data.slug - Post ID.
+	 * @param {string} data.type - Post type.
 	 * @returns {void}
 	 */
 	function requestPostUpdate( data ) {
@@ -241,11 +247,32 @@
 		if ( ! postTypeInterface ) {
 			return;
 		}
+
+		existingRequests[ data.id ] = ( existingRequests[ data.id ] || 0 ) + 1;
+		const requestId = existingRequests[ data.id ];
+
 		postTypeInterface.request( data.slug )( function( action ) {
-			foxhoundTheme.store.dispatch( action ); // @todo Do we need store here?
+
+			// Abort if the request was cancelled.
+			if ( ! existingRequests[ data.id ] ) {
+				return;
+			}
+
+			// Abort if another request started.
+			if ( requestId < existingRequests[ data.id ] ) {
+				return;
+			}
+
+			foxhoundTheme.store.dispatch( action );
 		} );
 	}
 
+	/**
+	 * Debounced request post update.
+	 *
+	 * @param {object} data - Post data.
+	 * @type {Function}
+	 */
 	const debouncedRequestPostUpdate = _.wrap(
 		_.memoize(
 			() => {
@@ -253,8 +280,9 @@
 			},
 			_.property( 'id' )
 		),
-		( func, obj ) => {
-			return func( obj )( obj );
+		( memoized, data ) => {
+			existingRequests[ data.id ] = null; // Prevent existing requestPostUpdate from dispatching.
+			return memoized( data )( data );
 		}
 	);
 
@@ -273,51 +301,53 @@
 		).join( '' );
 	};
 
-	/**
-	 * Listen to post and postmeta changes and sync into store.
-	 */
-	api.bind( 'change', function( setting ) {
-		const idParts = setting.id.replace( /]/g, '' ).split( /\[/ );
-		const settingType = idParts.shift();
+	// @todo Add previewing for featured image changes.
+	if ( api.selectiveRefresh.partialConstructor.post_field ) {
+		api.selectiveRefresh.partialConstructor.post_field.prototype.addInstantPreviews = function() {
+			/* No-op since live preview will be handled via updating store. */
+		};
+		api.selectiveRefresh.partialConstructor.post_field.prototype.createEditShortcutForPlacement = function() {
+			/* No-op since React manages the insertion of the edit shortcuts. */
+		};
+		api.selectiveRefresh.partialConstructor.post_field.prototype.addEditShortcutToPlacement = function() {
+			/* No-op since React manages the insertion of the edit shortcuts. */
+		};
 
-		if ( 'post' !== settingType && 'postmeta' !== settingType ) {
+		/**
+		 * Request the new partial and render it into the placements.
+		 *
+		 * @return {jQuery.Promise} Promise.
+		 */
+		api.selectiveRefresh.partialConstructor.post_field.prototype.refresh = function refresh() {
+			const partial = this;
+			const postType = partial.params.post_type;
+			const postId = partial.params.post_id;
 
-			// @todo Support nav menus.
-			return;
-		}
-
-		const postType = idParts.shift();
-
-		// Only posts and pages are currently supported.
-		if ( ! foxhoundTheme.postTypes[ postType ] ) {
-			return;
-		}
-		const postTypeInterface = foxhoundTheme.postTypes[ postType ];
-
-		const postId = parseInt( idParts.shift(), 10 );
-		if ( isNaN( postId ) ) {
-			return;
-		}
-		let metaKey = null;
-		if ( 'postmeta' === settingType ) {
-			metaKey = idParts.shift();
-			if ( ! metaKey ) {
-				return;
+			// Only posts and pages are currently supported.
+			if ( ! foxhoundTheme.postTypes[ postType ] ) {
+				return $.Deferred().reject().promise();
 			}
-		}
 
-		if ( 'post' === settingType ) {
+			const postTypeInterface = foxhoundTheme.postTypes[ postType ];
 			const data = _.clone( postTypeInterface.selector( foxhoundTheme.store.getState(), postId ) );
+			const setting = api( _.first( partial.settings() ) );
 			const value = setting.get();
 
 			// Apply low-fidelity instant preview.
-			data.title.rendered = value.post_title;
-			data.content.rendered = autop( value.post_content );
-			data.excerpt.rendered = autop( value.post_excerpt );
+			if ( 'post_title' === partial.params.field_id ) {
+				data.title.rendered = value.post_title;
+			} else if ( 'post_content' === partial.params.field_id ) {
+				data.content.rendered = autop( value.post_content );
+			} else if ( 'post_excerpt' === partial.params.field_id ) {
+				data.excerpt.rendered = autop( value.post_excerpt );
+			}
+
 			postTypeInterface.dispatchSuccess( data );
 
 			// Apply high-fidelity rendered preview from server.
 			debouncedRequestPostUpdate( data );
-		}
-	} );
+
+			return $.Deferred().resolve().promise();
+		};
+	}
 } )( jQuery, wp.customize, foxhoundTheme );

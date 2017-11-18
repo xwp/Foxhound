@@ -114,7 +114,11 @@ add_action( 'after_setup_theme', 'foxhound_content_width', 0 );
  */
 function foxhound_scripts() {
 	if ( is_customize_preview() ) {
-		wp_enqueue_script( 'foxhound-customize-preview', get_template_directory_uri() . '/build/customize-preview.js', array( 'jquery', 'customize-preview', 'customize-preview-nav-menus', FOXHOUND_APP ), FOXHOUND_VERSION, true );
+		$deps = array( 'jquery', 'customize-preview', 'customize-preview-nav-menus', FOXHOUND_APP );
+		if ( wp_script_is( 'customize-post-field-partial', 'registered' ) ) {
+			$deps[] = 'customize-post-field-partial';
+		}
+		wp_enqueue_script( 'foxhound-customize-preview', get_template_directory_uri() . '/build/customize-preview.js', $deps, FOXHOUND_VERSION, true );
 	}
 
 	wp_enqueue_style( 'foxhound-style', get_template_directory_uri() . '/build/style.css', array(), FOXHOUND_VERSION );
