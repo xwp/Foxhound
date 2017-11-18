@@ -24,8 +24,10 @@ class Foxhound_LoadData {
 	 * @param WP_Query $query The WP_Query object.
 	 */
 	public function unstick_stickies( $query ) {
-		$query->set( 'ignore_sticky_posts', true );
-		$query->set( 'posts_per_page', 10 );
+		if ( $query->is_main_query() ) {
+			$query->set( 'ignore_sticky_posts', true );
+			$query->set( 'posts_per_page', 10 );
+		}
 	}
 
 	/**
