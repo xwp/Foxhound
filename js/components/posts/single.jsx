@@ -3,6 +3,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import { Link } from 'react-router';
+import CustomizePostFieldPartial from 'components/customize-post-field-partial';
 
 // Internal dependencies
 import ContentMixin from 'utils/content-mixin';
@@ -28,10 +29,14 @@ let Post = React.createClass( {
 		return (
 			<article id={ `post-${post.id}` } className={ classes }>
 				<h2 className="entry-title">
-					<Link to={ path } rel="bookmark" dangerouslySetInnerHTML={ this.getTitle( post ) } />
+					<CustomizePostFieldPartial post={ post } field="title">
+						<Link to={ path } rel="bookmark" dangerouslySetInnerHTML={ this.getTitle( post ) } />
+					</CustomizePostFieldPartial>
 				</h2>
 
-				<div className="entry-content" dangerouslySetInnerHTML={ this.getExcerpt( post ) } />
+				<CustomizePostFieldPartial post={ post } field="content">
+					<div className="entry-content" dangerouslySetInnerHTML={ this.getExcerpt( post ) } />
+				</CustomizePostFieldPartial>
 
 				<div className="entry-meta">
 					<div className="entry-meta-label">published</div>
