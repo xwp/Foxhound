@@ -1,6 +1,8 @@
 /* global _, jQuery, wp, foxhoundTheme, wpApiSettings */
 ( function( $, api, foxhoundTheme ) {
 
+	const highFidelityRenderTimeout = 1000;
+
 	/**
 	 * Partial for previewing a value that is available as both raw/rendered via a REST API endpoint.
 	 *
@@ -17,7 +19,7 @@
 		initialize: function( id, options ) {
 			const partial = this;
 			api.selectiveRefresh.Partial.prototype.initialize.call( this, id, options );
-			partial.renderFetchedContent = _.debounce( partial.renderFetchedContent, api.settings.timeouts.selectiveRefresh );
+			partial.renderFetchedContent = _.debounce( partial.renderFetchedContent, highFidelityRenderTimeout );
 		},
 
 		/**
@@ -136,7 +138,7 @@
 		initialize: function( id, options ) {
 			const partial = this;
 			api.navMenusPreview.NavMenuInstancePartial.prototype.initialize.call( this, id, options );
-			partial.fetch = _.debounce( partial.fetch, api.settings.timeouts.selectiveRefresh );
+			partial.fetch = _.debounce( partial.fetch, highFidelityRenderTimeout );
 		},
 
 		/**
@@ -253,11 +255,6 @@
 
 		postTypeInterface.request( data.slug )( function( action ) {
 
-			// Abort if the request was cancelled.
-			if ( ! existingRequests[ data.id ] ) {
-				return;
-			}
-
 			// Abort if another request started.
 			if ( requestId < existingRequests[ data.id ] ) {
 				return;
@@ -276,12 +273,11 @@
 	const debouncedRequestPostUpdate = _.wrap(
 		_.memoize(
 			() => {
-				return _.debounce( requestPostUpdate, api.settings.timeouts.selectiveRefresh );
+				return _.debounce( requestPostUpdate, highFidelityRenderTimeout );
 			},
 			_.property( 'id' )
 		),
 		( memoized, data ) => {
-			existingRequests[ data.id ] = null; // Prevent existing requestPostUpdate from dispatching.
 			return memoized( data )( data );
 		}
 	);
