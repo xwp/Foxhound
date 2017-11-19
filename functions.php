@@ -118,6 +118,9 @@ function foxhound_scripts() {
 		if ( wp_script_is( 'customize-post-field-partial', 'registered' ) ) {
 			$deps[] = 'customize-post-field-partial';
 		}
+		if ( wp_script_is( 'customize-preview-featured-image', 'registered' ) ) {
+			$deps[] = 'customize-preview-featured-image';
+		}
 		wp_enqueue_script( 'foxhound-customize-preview', get_template_directory_uri() . '/build/customize-preview.js', $deps, FOXHOUND_VERSION, true );
 	}
 

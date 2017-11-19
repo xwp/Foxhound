@@ -1,4 +1,4 @@
-/* global _, jQuery, wp, foxhoundTheme, wpApiSettings */
+/* global _, jQuery, wp, foxhoundTheme, wpApiSettings, CustomizePreviewFeaturedImage */
 ( function( $, api, foxhoundTheme ) {
 
 	const highFidelityRenderTimeout = 1000;
@@ -310,7 +310,7 @@
 		};
 
 		/**
-		 * Request the new partial and render it into the placements.
+		 * Update the store with the new post setting value.
 		 *
 		 * @return {jQuery.Promise} Promise.
 		 */
@@ -342,6 +342,32 @@
 
 			// Apply high-fidelity rendered preview from server.
 			debouncedRequestPostUpdate( data );
+
+			return $.Deferred().resolve().promise();
+		};
+	}
+
+	if ( typeof CustomizePreviewFeaturedImage !== 'undefined' && CustomizePreviewFeaturedImage.FeaturedImagePartial ) {
+
+		/**
+		 * Update the store with the newly-selected featured image for the post.
+		 *
+		 * @return {jQuery.Promise} Promise.
+		 */
+		CustomizePreviewFeaturedImage.FeaturedImagePartial.prototype.refresh = function refresh() {
+			const partial = this;
+			const postType = partial.params.post_type;
+			const postId = partial.params.post_id;
+
+			// Only posts and pages are currently supported.
+			if ( ! foxhoundTheme.postTypes[ postType ] ) {
+				return $.Deferred().reject().promise();
+			}
+
+			const postTypeInterface = foxhoundTheme.postTypes[ postType ];
+			const data = _.clone( postTypeInterface.selector( foxhoundTheme.store.getState(), postId ) );
+
+			requestPostUpdate( data );
 
 			return $.Deferred().resolve().promise();
 		};
