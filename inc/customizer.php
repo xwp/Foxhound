@@ -63,6 +63,9 @@ function _foxhound_disable_customize_posts_slug_control() {
 	if ( wp_script_is( 'customize-post-section' ) ) {
 		wp_add_inline_script( 'customize-post-section', 'wp.customize.Posts.PostSection.prototype.addSlugControl = function() {};' );
 	}
+	if ( ! wp_script_is( 'customize-preview-fetch-api', 'registered' ) ) {
+		wp_die( 'Customizer with Foxhound depends on having the <a href="https://github.com/xwp/wp-customize-preview-fetch-api">Customize Preview Fetch API</a> plugin installed.' );
+	}
 }
 add_action( 'customize_controls_enqueue_scripts', '_foxhound_disable_customize_posts_slug_control', 20 );
 

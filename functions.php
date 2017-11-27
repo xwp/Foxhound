@@ -114,7 +114,7 @@ add_action( 'after_setup_theme', 'foxhound_content_width', 0 );
  */
 function foxhound_scripts() {
 	if ( is_customize_preview() ) {
-		$deps = array( 'jquery', 'customize-preview', 'customize-preview-nav-menus', FOXHOUND_APP );
+		$deps = array( 'jquery', 'customize-preview', 'customize-preview-nav-menus', 'wp-api', FOXHOUND_APP );
 		if ( wp_script_is( 'customize-post-field-partial', 'registered' ) ) {
 			$deps[] = 'customize-post-field-partial';
 		}
