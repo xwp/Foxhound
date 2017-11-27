@@ -297,7 +297,6 @@
 		).join( '' );
 	};
 
-	// @todo Add previewing for featured image changes.
 	if ( api.selectiveRefresh.partialConstructor.post_field ) {
 		api.selectiveRefresh.partialConstructor.post_field.prototype.addInstantPreviews = function() {
 			/* No-op since live preview will be handled via updating store. */
