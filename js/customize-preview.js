@@ -336,7 +336,6 @@
 			} else if ( 'post_excerpt' === partial.params.field_id ) {
 				data.excerpt.rendered = autop( value.post_excerpt );
 			}
-
 			postTypeInterface.dispatchSuccess( data );
 
 			// Apply high-fidelity rendered preview from server.
