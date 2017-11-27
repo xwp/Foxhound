@@ -30,7 +30,7 @@ import NotFound from 'components/not-found';
 import { createReduxStore } from './state';
 import { setMenu } from 'wordpress-query-menu/lib/state';
 import { setPost, setPosts } from './utils/initial-actions';
-import { requestPost, POST_REQUEST_SUCCESS } from 'wordpress-query-posts/lib/state';
+import { requestPost, POST_REQUEST_SUCCESS, POSTS_RECEIVE } from 'wordpress-query-posts/lib/state';
 import { getPost } from 'wordpress-query-posts/lib/selectors';
 import { requestPage, PAGE_REQUEST_SUCCESS } from 'wordpress-query-page/lib/state';
 import { getPage } from 'wordpress-query-page/lib/selectors';
@@ -224,11 +224,14 @@ if ( typeof wp !== 'undefined' && wp.customize ) {
 			post: {
 				selector: getPost,
 				dispatchSuccess: ( data ) => {
+					store.dispatch({
+						type: POSTS_RECEIVE,
+						posts: [ data ]
+					});
 					store.dispatch( {
 						type: POST_REQUEST_SUCCESS,
 						postId: data.id,
-						pagePath: data.slug,
-						page: data
+						postSlug: data.slug
 					} );
 				},
 				request: requestPost,
